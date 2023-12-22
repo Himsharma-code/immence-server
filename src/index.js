@@ -1,43 +1,37 @@
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import connectDB from "./config/db.js";
+import { notFound, errorHandler } from "./middlewares/ErrorMiddleware.js";
+import UserRoutes from "./routes/users.js";
 
 const app = express();
 
-var corsOptions = {
-  origin: "http://localhost:8081",
-};
+dotenv.config();
 
-app.use(cors(corsOptions));
+connectDB();
 
-// parse requests of content-type - application/json
 app.use(express.json());
 
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
-
-const db = require("./models");
-db.mongoose
-  .connect(db.url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+// Enable CORS for all routes
+app.use(
+  cors({
+    origin: "*",
   })
-  .then(() => {
-    console.log("Connected to the database!");
-  })
-  .catch((err) => {
-    console.log("Cannot connect to the database!", err);
-    process.exit();
-  });
+);
 
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to bezkoder application." });
+// Default
+app.get("/api", (req, res) => {
+  res.status(201).json({ message: "Welcome to immnce ts" });
 });
 
-require("./routes/turorial.routes")(app);
+// User Route
+app.use("/api/user", UserRoutes);
 
-// set port, listen for requests
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+// Middleware
+app.use(notFound);
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`Server is running on ${PORT}`));
